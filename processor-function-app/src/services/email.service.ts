@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 export type EmailOptions = {
-    to: string;
+    to: string | string[];
     subject: string;
     html: string;
 };
@@ -22,24 +22,39 @@ async function sendEmail(options: EmailOptions): Promise<void> {
     const transporter = createTransporter();
     await transporter.sendMail({
         from: process.env.SMTP_FROM,
-        to: options.to,
+        to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
         subject: options.subject,
         html: options.html,
     });
 }
 
 export const emailService = {
-    sendRenewalReminder: (to: string, companyId: string, renewalDate: string) =>
-        sendEmail({
+    sendRenewalReminder: (to: string | string[], companyId: string, renewalDate: string) => {
+        const formatted = new Date(renewalDate).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric',
+        });
+        return sendEmail({
             to,
-            subject: 'Your subscription is renewing soon',
-            html: `<p>Hello,</p><p>Your subscription (company: <b>${companyId}</b>) will renew on <b>${renewalDate}</b>.</p><p>Thank you for being with us.</p>`,
-        }),
+            subject: 'Subscription renewal in 7 days',
+            html: `
+                <p>Hello,</p>
+                <p>Your EnerJobs Premium subscription (company ID: <b>${companyId}</b>) is set to renew on <b>${formatted}</b>.</p>
+                <p>To avoid any interruption to your service, please ensure your payment details are up to date.</p>
+                <p>Thank you for being a Premium member.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        });
+    },
 
-    sendExpiryNotification: (to: string, companyId: string) =>
+    sendExpiryNotification: (to: string | string[], companyId: string) =>
         sendEmail({
             to,
-            subject: 'Your subscription has expired',
-            html: `<p>Hello,</p><p>Your subscription (company: <b>${companyId}</b>) has expired. Please renew to continue using our services.</p>`,
+            subject: 'Subscription expired — downgraded to Free',
+            html: `
+                <p>Hello,</p>
+                <p>Your EnerJobs Premium subscription (company ID: <b>${companyId}</b>) has expired and your account has been downgraded to the Free plan.</p>
+                <p>You can renew your subscription at any time to regain access to Premium features.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
         }),
 };

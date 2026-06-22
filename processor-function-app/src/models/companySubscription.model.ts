@@ -11,6 +11,7 @@ export interface ICompanySubscription {
     startDate: Date;
     nextRenewalDate?: Date;
     cancelledAt?: Date;
+    reminderSentAt?: Date;
     stripeCustomerId?: string;
     stripeLastPaymentIntentId?: string;
     createdAt?: Date;
@@ -26,6 +27,7 @@ const companySubscriptionSchema = new Schema<ICompanySubscription>(
         startDate:                 { type: Date, required: true, default: Date.now },
         nextRenewalDate:           { type: Date, index: true },
         cancelledAt:               { type: Date },
+        reminderSentAt:            { type: Date, default: null },
         stripeCustomerId:          { type: String },
         stripeLastPaymentIntentId: { type: String },
     },

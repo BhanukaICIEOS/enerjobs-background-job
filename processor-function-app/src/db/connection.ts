@@ -1,4 +1,7 @@
+import dns from 'dns';
 import mongoose from 'mongoose';
+
+dns.setServers(['8.8.8.8']);
 
 let isConnected = false;
 

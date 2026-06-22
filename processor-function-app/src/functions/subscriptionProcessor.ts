@@ -1,6 +1,8 @@
 import { app, InvocationContext } from "@azure/functions";
+import { Types } from "mongoose";
 import { connectToDatabase } from "../db/connection";
 import { emailService } from "../services/email.service";
+import { employerProfileRepository } from "../repositories/employerProfile.repository";
 
 type SubscriptionQueueMessage =
     | { type: 'renewal_reminder'; companyId: string; renewalDate: string }
@@ -19,18 +21,23 @@ export async function subscriptionProcessor(message: unknown, context: Invocatio
         return;
     }
 
-    // TODO: look up the company email from DB instead of using a placeholder
-    const companyEmail = process.env.DEFAULT_RECIPIENT_EMAIL ?? 'admin@example.com';
+    const companyObjectId = new Types.ObjectId(payload.companyId);
+    const recipients = await employerProfileRepository.findApprovedEmailsForCompany(companyObjectId);
+
+    if (recipients.length === 0) {
+        context.warn(`subscriptionProcessor: no approved recipients found for company ${payload.companyId}, skipping email`);
+        return;
+    }
 
     switch (payload.type) {
         case 'renewal_reminder':
-            await emailService.sendRenewalReminder(companyEmail, payload.companyId, payload.renewalDate);
-            context.log(`subscriptionProcessor: sent renewal reminder email for company ${payload.companyId}`);
+            await emailService.sendRenewalReminder(recipients, payload.companyId, payload.renewalDate);
+            context.log(`subscriptionProcessor: sent renewal reminder to ${recipients.length} recipient(s) for company ${payload.companyId}`);
             break;
 
         case 'expiry_notification':
-            await emailService.sendExpiryNotification(companyEmail, payload.companyId);
-            context.log(`subscriptionProcessor: sent expiry notification email for company ${payload.companyId}`);
+            await emailService.sendExpiryNotification(recipients, payload.companyId);
+            context.log(`subscriptionProcessor: sent expiry notification to ${recipients.length} recipient(s) for company ${payload.companyId}`);
             break;
 
         default:

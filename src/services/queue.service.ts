@@ -2,11 +2,16 @@ import { QueueServiceClient } from '@azure/storage-queue';
 
 const QUEUE_NAMES = {
     subscription: 'subscription-queue',
+    jobExpiry:    'job-expiry-queue',
 } as const;
 
 export type SubscriptionQueueMessage =
     | { type: 'renewal_reminder';   companyId: string; renewalDate: string }
     | { type: 'expiry_notification'; companyId: string };
+
+export type JobExpiryQueueMessage =
+    | { type: 'job_expiry_reminder'; jobId: string; companyId: string; jobTitle: string; expiresAt: string }
+    | { type: 'job_expired';         jobId: string; companyId: string; jobTitle: string };
 
 let client: QueueServiceClient | null = null;
 
@@ -29,4 +34,7 @@ async function sendMessage(queueName: string, message: object): Promise<void> {
 export const queueService = {
     sendSubscriptionMessage: (message: SubscriptionQueueMessage) =>
         sendMessage(QUEUE_NAMES.subscription, message),
+
+    sendJobExpiryMessage: (message: JobExpiryQueueMessage) =>
+        sendMessage(QUEUE_NAMES.jobExpiry, message),
 };

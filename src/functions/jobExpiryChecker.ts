@@ -4,8 +4,13 @@ import { jobExpiryService } from "../services/jobExpiry.service";
 
 export async function jobExpiryChecker(_myTimer: Timer, context: InvocationContext): Promise<void> {
     await connectToDatabase();
-    const count = await jobExpiryService.processExpiredJobs();
-    context.log(`jobExpiryChecker: marked ${count} job(s) as expired`);
+
+    const [reminders, expired] = await Promise.all([
+        jobExpiryService.processExpiringJobReminders(),
+        jobExpiryService.processExpiredJobs(),
+    ]);
+
+    context.log(`jobExpiryChecker: sent ${reminders} expiry reminder(s), marked ${expired} job(s) as expired`);
 }
 
 app.timer('jobExpiryChecker', {

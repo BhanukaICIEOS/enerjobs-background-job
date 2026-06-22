@@ -12,13 +12,31 @@ function startOfToday(): Date {
 class SubscriptionRepository {
     findPremiumDueForRenewalReminder(): Promise<ICompanySubscription[]> {
         const today = startOfToday();
-        const in7Days  = new Date(today); in7Days.setDate(in7Days.getDate() + 7);
-        const in8Days  = new Date(today); in8Days.setDate(in8Days.getDate() + 8);
+        const in7Days = new Date(today); in7Days.setDate(in7Days.getDate() + 7);
+        const in8Days = new Date(today); in8Days.setDate(in8Days.getDate() + 8);
 
+        // Dedup: skip if a reminder was already sent during the current 7-day window
+        // (reminderSentAt >= nextRenewalDate - 8 days means it was sent for this cycle)
         return CompanySubscription.find({
             status: SubscriptionStatus.PREMIUM,
             nextRenewalDate: { $gte: in7Days, $lt: in8Days },
+            $or: [
+                { reminderSentAt: { $exists: false } },
+                { reminderSentAt: null },
+                {
+                    $expr: {
+                        $lt: [
+                            '$reminderSentAt',
+                            { $subtract: ['$nextRenewalDate', 8 * 24 * 60 * 60 * 1000] },
+                        ],
+                    },
+                },
+            ],
         }).lean();
+    }
+
+    async markReminderSent(id: Types.ObjectId): Promise<void> {
+        await CompanySubscription.updateOne({ _id: id }, { $set: { reminderSentAt: new Date() } });
     }
 
     findExpiredPremiumSubscriptions(): Promise<ICompanySubscription[]> {

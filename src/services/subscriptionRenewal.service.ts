@@ -18,6 +18,7 @@ class SubscriptionRenewalService {
                 companyId: (sub.companyId as Types.ObjectId).toString(),
                 renewalDate: sub.nextRenewalDate!.toISOString(),
             });
+            await subscriptionRepository.markReminderSent(sub._id as Types.ObjectId);
         }
 
         return subscriptions.length;

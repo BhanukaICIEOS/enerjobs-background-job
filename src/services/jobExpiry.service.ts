@@ -13,7 +13,7 @@ class JobExpiryService {
                 jobId:     (job._id as mongoose.Types.ObjectId).toString(),
                 companyId: (job.companyId as mongoose.Types.ObjectId).toString(),
                 jobTitle:  job.title,
-                expiresAt: job.expiresAt.toISOString(),
+                expiresAt: job.expirationDate!.toISOString(),
             });
             await jobRepository.markReminderSent(job._id as mongoose.Types.ObjectId);
         }

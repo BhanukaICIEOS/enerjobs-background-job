@@ -57,4 +57,32 @@ export const emailService = {
                 <p>— The EnerJobs Team</p>
             `.trim(),
         }),
+
+    sendJobExpiryReminder: (to: string | string[], jobTitle: string, expiresAt: string) => {
+        const formatted = new Date(expiresAt).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric',
+        });
+        return sendEmail({
+            to,
+            subject: `Job listing expiring soon: ${jobTitle}`,
+            html: `
+                <p>Hello,</p>
+                <p>Your job listing <b>${jobTitle}</b> is set to expire on <b>${formatted}</b>.</p>
+                <p>Please log in to EnerJobs to renew or extend the listing before it expires.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        });
+    },
+
+    sendJobExpiredNotification: (to: string | string[], jobTitle: string) =>
+        sendEmail({
+            to,
+            subject: `Job listing expired: ${jobTitle}`,
+            html: `
+                <p>Hello,</p>
+                <p>Your job listing <b>${jobTitle}</b> has expired and is no longer visible to candidates.</p>
+                <p>You can repost or renew it at any time from your EnerJobs dashboard.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        }),
 };

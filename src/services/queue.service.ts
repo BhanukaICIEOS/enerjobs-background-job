@@ -3,6 +3,7 @@ import { QueueServiceClient } from '@azure/storage-queue';
 const QUEUE_NAMES = {
     subscription: 'subscription-queue',
     jobExpiry:    'job-expiry-queue',
+    promotion:    'promotion-queue',
 } as const;
 
 export type SubscriptionQueueMessage =
@@ -12,6 +13,10 @@ export type SubscriptionQueueMessage =
 export type JobExpiryQueueMessage =
     | { type: 'job_expiry_reminder'; jobId: string; companyId: string; jobTitle: string; expiresAt: string }
     | { type: 'job_expired';         jobId: string; companyId: string; jobTitle: string };
+
+export type PromotionQueueMessage =
+    | { type: 'promotion_expiry_reminder'; promotionId: string; companyId: string; jobTitle: string; expiresAt: string }
+    | { type: 'promotion_expired';         promotionId: string; companyId: string; jobTitle: string };
 
 let client: QueueServiceClient | null = null;
 
@@ -37,4 +42,7 @@ export const queueService = {
 
     sendJobExpiryMessage: (message: JobExpiryQueueMessage) =>
         sendMessage(QUEUE_NAMES.jobExpiry, message),
+
+    sendPromotionMessage: (message: PromotionQueueMessage) =>
+        sendMessage(QUEUE_NAMES.promotion, message),
 };

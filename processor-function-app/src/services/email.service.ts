@@ -85,4 +85,33 @@ export const emailService = {
                 <p>— The EnerJobs Team</p>
             `.trim(),
         }),
+
+    sendPromotionExpiryReminder: (to: string | string[], jobTitle: string, expiresAt: string) => {
+        const formatted = new Date(expiresAt).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric',
+        });
+        console.log("to>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>", to)
+        return sendEmail({
+            to,
+            subject: 'Promotion expiring soon (3 days)',
+            html: `
+                <p>Hello,</p>
+                <p>The promoted listing for <b>"${jobTitle}"</b> on EnerJobs will expire on <b>${formatted}</b>.</p>
+                <p>After that date it will no longer appear in promoted slots. Log in to renew the promotion if needed.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        });
+    },
+
+    sendPromotionExpiredNotification: (to: string | string[], jobTitle: string) =>
+        sendEmail({
+            to,
+            subject: 'Promotion expired',
+            html: `
+                <p>Hello,</p>
+                <p>The paid promotion for your job listing <b>"${jobTitle}"</b> has ended.</p>
+                <p>The listing is still active but is no longer featured in promoted slots. You can purchase a new promotion from your EnerJobs dashboard.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        }),
 };

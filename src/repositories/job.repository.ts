@@ -30,8 +30,52 @@ class JobRepository {
         }).lean() as unknown as Promise<IJob[]>;
     }
 
+    /**
+     * Finds ACTIVE jobs for PREMIUM companies where the 7-day refresh cooldown
+     * has cleared and no refresh-available notification has been sent for the
+     * current refresh cycle.
+     * Uses $lookup against company_subscriptions to enforce the PREMIUM filter.
+     */
+    findJobsWithCooldownCleared(): Promise<IJob[]> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        return Job.aggregate<IJob>([
+            {
+                $match: {
+                    status: 'ACTIVE',
+                    isRefreshed: true,
+                    refreshedAt: { $lte: sevenDaysAgo },
+                    $or: [
+                        { refreshNotificationSentAt: { $exists: false } },
+                        { refreshNotificationSentAt: null },
+                        { $expr: { $lt: ['$refreshNotificationSentAt', '$refreshedAt'] } },
+                    ],
+                },
+            },
+            {
+                $lookup: {
+                    from: 'company_subscriptions',
+                    localField: 'companyId',
+                    foreignField: 'companyId',
+                    as: 'subscription',
+                },
+            },
+            {
+                $match: { 'subscription.status': 'PREMIUM' },
+            },
+            {
+                $project: { subscription: 0 },
+            },
+        ]);
+    }
+
     async markReminderSent(id: mongoose.Types.ObjectId): Promise<void> {
         await Job.updateOne({ _id: id }, { $set: { reminderSentAt: new Date() } });
+    }
+
+    async markRefreshNotificationSent(id: mongoose.Types.ObjectId): Promise<void> {
+        await Job.updateOne({ _id: id }, { $set: { refreshNotificationSentAt: new Date() } });
     }
 
     async bulkMarkExpired(ids: mongoose.Types.ObjectId[]): Promise<number> {

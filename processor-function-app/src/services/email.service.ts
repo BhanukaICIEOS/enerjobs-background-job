@@ -114,4 +114,16 @@ export const emailService = {
                 <p>— The EnerJobs Team</p>
             `.trim(),
         }),
+
+    sendJobRefreshAvailable: (to: string | string[], jobTitle: string) =>
+        sendEmail({
+            to,
+            subject: 'Job refresh available — you can refresh this listing now',
+            html: `
+                <p>Hello,</p>
+                <p>The 7-day refresh cooldown for your job listing <b>"${jobTitle}"</b> has cleared.</p>
+                <p>You can now refresh this listing to move it back to the top of search results. Log in to your EnerJobs dashboard to refresh it.</p>
+                <p>— The EnerJobs Team</p>
+            `.trim(),
+        }),
 };

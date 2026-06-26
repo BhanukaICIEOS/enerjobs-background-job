@@ -4,6 +4,7 @@ const QUEUE_NAMES = {
     subscription: 'subscription-queue',
     jobExpiry:    'job-expiry-queue',
     promotion:    'promotion-queue',
+    jobRefresh:   'job-refresh-queue',
 } as const;
 
 export type SubscriptionQueueMessage =
@@ -17,6 +18,9 @@ export type JobExpiryQueueMessage =
 export type PromotionQueueMessage =
     | { type: 'promotion_expiry_reminder'; promotionId: string; companyId: string; jobTitle: string; expiresAt: string }
     | { type: 'promotion_expired';         promotionId: string; companyId: string; jobTitle: string };
+
+export type JobRefreshQueueMessage =
+    | { type: 'refresh_available'; jobId: string; companyId: string; jobTitle: string };
 
 let client: QueueServiceClient | null = null;
 
@@ -45,4 +49,7 @@ export const queueService = {
 
     sendPromotionMessage: (message: PromotionQueueMessage) =>
         sendMessage(QUEUE_NAMES.promotion, message),
+
+    sendJobRefreshMessage: (message: JobRefreshQueueMessage) =>
+        sendMessage(QUEUE_NAMES.jobRefresh, message),
 };

@@ -1,15 +1,17 @@
 import mongoose, { Schema } from 'mongoose';
 
-export type JobStatus = 'active' | 'expired' | 'draft' | 'closed';
+export type ListingStatus = 'DRAFT' | 'ACTIVE' | 'EXPIRED' | 'CLOSED' | 'ARCHIVED';
 
 export interface IJob {
     _id: mongoose.Types.ObjectId;
     title: string;
     description: string;
-    status: JobStatus;
-    expiresAt: Date;
-    postedAt: Date;
+    status: ListingStatus;
+    expirationDate?: Date;
     companyId: mongoose.Types.ObjectId;
+    isRefreshed?: boolean;
+    refreshedAt?: Date | null;
+    refreshNotificationSentAt?: Date | null;
     reminderSentAt?: Date | null;
     createdAt: Date;
     updatedAt: Date;
@@ -17,15 +19,17 @@ export interface IJob {
 
 const jobSchema = new Schema<IJob>(
     {
-        title:       { type: String, required: true },
-        description: { type: String, required: true },
-        status:      { type: String, enum: ['active', 'expired', 'draft', 'closed'], default: 'draft' },
-        expiresAt:   { type: Date, required: true },
-        postedAt:    { type: Date, default: Date.now },
-        companyId:     { type: Schema.Types.ObjectId, ref: 'Company', required: true },
-        reminderSentAt: { type: Date, default: null },
+        title:                      { type: String, required: true },
+        description:                { type: String, required: true },
+        status:                     { type: String, enum: ['DRAFT', 'ACTIVE', 'EXPIRED', 'CLOSED', 'ARCHIVED'] },
+        expirationDate:             { type: Date, required: false },
+        companyId:                  { type: Schema.Types.ObjectId, ref: 'Company', required: true },
+        isRefreshed:                { type: Boolean, default: false },
+        refreshedAt:                { type: Date, default: null },
+        refreshNotificationSentAt:  { type: Date, default: null },
+        reminderSentAt:             { type: Date, default: null },
     },
     { timestamps: true }
 );
 
-export const Job = mongoose.model<IJob>('Job', jobSchema);
+export const Job = mongoose.model<IJob>('Job', jobSchema, 'job_listings');

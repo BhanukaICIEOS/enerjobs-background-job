@@ -1,14 +1,14 @@
 import { app, InvocationContext, Timer } from "@azure/functions";
 import { connectToDatabase } from "../db/connection";
+import { refreshCheckerService } from "../services/refreshChecker.service";
 
 export async function refreshChecker(_myTimer: Timer, context: InvocationContext): Promise<void> {
     await connectToDatabase();
-    context.log('refreshChecker: connected to DB, running refresh logic...');
-
-    // TODO: add your mongoose queries here
+    const count = await refreshCheckerService.processRefreshableJobs();
+    context.log(`refreshChecker: sent ${count} refresh-available notification(s)`);
 }
 
 app.timer('refreshChecker', {
-    schedule: '0 0 0 * * *',
+    schedule: '0 * * * * *', // TEMP: revert to '0 0 * * * *'
     handler: refreshChecker
 });

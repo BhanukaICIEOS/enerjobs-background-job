@@ -46,11 +46,11 @@ class JobRepository {
                     status: 'ACTIVE',
                     isRefreshed: true,
                     refreshedAt: { $lte: sevenDaysAgo },
-                    $or: [
-                        { refreshNotificationSentAt: { $exists: false } },
-                        { refreshNotificationSentAt: null },
-                        { $expr: { $lt: ['$refreshNotificationSentAt', '$refreshedAt'] } },
-                    ],
+                    // $or: [
+                    //     { refreshNotificationSentAt: { $exists: false } },
+                    //     { refreshNotificationSentAt: null },
+                    //     { $expr: { $lt: ['$refreshNotificationSentAt', '$refreshedAt'] } },
+                    // ],
                 },
             },
             {
@@ -75,7 +75,7 @@ class JobRepository {
     }
 
     async markRefreshNotificationSent(id: mongoose.Types.ObjectId): Promise<void> {
-        await Job.updateOne({ _id: id }, { $set: { refreshNotificationSentAt: new Date() } });
+        await Job.updateOne({ _id: id }, { $set: { refreshNotificationSentAt: new Date(), isRefreshed: false } });
     }
 
     async bulkMarkExpired(ids: mongoose.Types.ObjectId[]): Promise<number> {
